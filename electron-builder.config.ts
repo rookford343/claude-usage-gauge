@@ -7,7 +7,7 @@ const config: Configuration = {
     buildResources: 'resources',
     output: 'release'
   },
-  files: ['dist/**', 'package.json'],
+  files: ['out/**', 'package.json'],
   mac: {
     target: [{ target: 'dmg', arch: ['arm64', 'x64'] }],
     icon: 'resources/icon.icns',

@@ -2,7 +2,7 @@
   "name": "claude-usage-bar",
   "version": "0.1.0",
   "description": "macOS menu bar app showing Claude AI usage limits",
-  "main": "dist/main/index.js",
+  "main": "out/main/index.js",
   "author": "Dan Ford",
   "private": true,
   "scripts": {
