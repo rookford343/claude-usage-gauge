@@ -1,0 +1,32 @@
+{
+  "name": "claude-usage-bar",
+  "version": "0.1.0",
+  "description": "macOS menu bar app showing Claude AI usage limits",
+  "main": "dist/main/index.js",
+  "author": "Dan Ford",
+  "private": true,
+  "scripts": {
+    "dev": "bunx electron-vite dev",
+    "build:app": "bunx electron-vite build",
+    "build": "bunx electron-vite build && bunx electron-builder",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.json",
+    "preview": "bunx electron-vite preview"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "electron-store": "^8.1.0",
+    "menubar": "^9.5.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.7.2"
+  }
+}
