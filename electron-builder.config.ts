@@ -1,8 +1,8 @@
 import type { Configuration } from 'electron-builder'
 
 const config: Configuration = {
-  appId: 'com.danford.claude-usage-bar',
-  productName: 'Claude Usage Bar',
+  appId: 'com.danford.claude-usage-gauge',
+  productName: 'Claude Usage Gauge',
   directories: {
     buildResources: 'resources',
     output: 'release'
