@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.2 — 2026-05-15
+
+### Bug Fixes
+- **Dual-donut text clipping** — "88%" and "100%" no longer get cut off on both sides. Canvas width increased from 168→200px (84→100pt rendered), donut centers shifted outward to maintain ring spacing, percentage font sized to 20px so three-digit values fit comfortably in the wider number zones.
+
 ## v1.1.1 — 2026-05-15
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-gauge",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "macOS menu bar app showing Claude AI usage limits as a donut gauge",
   "main": "out/main/index.js",
   "author": "Dan Ford",

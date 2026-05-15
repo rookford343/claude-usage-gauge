@@ -9,8 +9,8 @@ const SCALE = 3
 
 // Dual-donut uses SCALE=2 so fonts render at 2× the pt size vs SCALE=3.
 // HD=44 → 22pt rendered height (same as menu bar).
-// WD=168 → 84pt rendered width — fits numbers + rings + divider with legible text.
-const WD = 168  // dual-donut canvas width
+// WD=200 → 100pt rendered width — wide enough for "100%" without clipping.
+const WD = 200  // dual-donut canvas width
 const HD = 44   // dual-donut canvas height
 const SCALE_D = 2
 
@@ -91,11 +91,11 @@ function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: n
   const radius = 14
   const stroke = 7
   // outer edge from center = radius + stroke/2 = 17.5
-  // Number zone: x=0–36 (session) and x=132–168 (weekly) → 36px each
-  // Donut centers: 36 + 4(gap) + 17.5(outerR) = 57.5 → cxS=58, cxW=110
-  // Divider at x=84 (WD/2). Left outer right=75.5, right outer left=92.5 → 8.5px each side ✓
-  const cxS = 58
-  const cxW = 110
+  // Number zone: x=0–52 (session) and x=148–200 (weekly) → 52px each (fits "100%" at 20px bold)
+  // Donut centers: 52 + 4(gap) + 17.5(outerR) = 73.5 → cxS=74, cxW=126
+  // Divider at x=100 (WD/2). Left outer right=91.5, right outer left=108.5 → 8.5px each side ✓
+  const cxS = 74
+  const cxW = 126
 
   drawDonut(ctx, cxS, cy, radius, stroke, sessionPct, palette)
   drawDonut(ctx, cxW, cy, radius, stroke, weeklyPct, palette)
@@ -117,10 +117,10 @@ function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: n
   drawOutlinedText(ctx, 'S', cxS, cy, palette)
   drawOutlinedText(ctx, 'W', cxW, cy, palette)
 
-  // Flanking percentages — 22px canvas = 11pt rendered at SCALE=2, clearly legible
-  ctx.font = 'bold 22px -apple-system, sans-serif'
-  drawOutlinedText(ctx, `${sessionPct}%`, 18, cy, palette)
-  drawOutlinedText(ctx, `${weeklyPct}%`, WD - 18, cy, palette)
+  // Flanking percentages — 20px canvas = 10pt rendered at SCALE=2, fits "100%" in 52px zone
+  ctx.font = 'bold 20px -apple-system, sans-serif'
+  drawOutlinedText(ctx, `${sessionPct}%`, 26, cy, palette)
+  drawOutlinedText(ctx, `${weeklyPct}%`, WD - 26, cy, palette)
 }
 
 function drawDualNumbersStyle(ctx: SKRSContext2D, sessionPct: number): void {
