@@ -1,4 +1,4 @@
-import { app, session, Menu, dialog, nativeTheme } from 'electron'
+import { app, session, Menu, dialog, nativeTheme, powerMonitor } from 'electron'
 import { menubar } from 'menubar'
 import { join } from 'path'
 import { Poller } from './poller'
@@ -68,6 +68,14 @@ app.whenReady().then(() => {
     })
 
     registerIpcHandlers(mb, poller)
+
+    // Force an immediate refresh after lock/sleep — avoids stale 0% on resume
+    powerMonitor.on('unlock-screen', () => {
+      poller.forceRefresh()
+    })
+    powerMonitor.on('resume', () => {
+      poller.forceRefresh()
+    })
 
     const quitMenu = Menu.buildFromTemplate([
       {

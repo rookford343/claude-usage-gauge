@@ -86,14 +86,28 @@ export class Poller {
       const message = err instanceof Error ? err.message : 'Unknown error'
       console.log('[claude-usage-gauge] poll error:', message)
       const isExpired = message === 'SESSION_EXPIRED'
-      this.currentUsage = {
-        session: { percentage: 0, messagesRemaining: null, resetsAt: null },
-        weekly: { percentage: 0, resetsAt: null },
-        lastUpdated: new Date().toISOString(),
-        error: isExpired ? 'Session expired — reconnect' : 'Network error',
+      if (isExpired) {
+        this.currentUsage = {
+          session: { percentage: 0, messagesRemaining: null, resetsAt: null },
+          weekly: { percentage: 0, resetsAt: null },
+          lastUpdated: new Date().toISOString(),
+          error: 'Session expired — reconnect',
+        }
+        this.broadcast(this.currentUsage)
+        this.stop()
+      } else {
+        // Preserve last known good percentages on transient errors (sleep, lock-screen)
+        const prev = this.currentUsage
+        this.currentUsage = prev
+          ? { ...prev, lastUpdated: new Date().toISOString(), error: 'Network error' }
+          : {
+              session: { percentage: 0, messagesRemaining: null, resetsAt: null },
+              weekly: { percentage: 0, resetsAt: null },
+              lastUpdated: new Date().toISOString(),
+              error: 'Network error',
+            }
+        this.broadcast(this.currentUsage)
       }
-      this.broadcast(this.currentUsage)
-      if (isExpired) this.stop()
     }
   }
 
@@ -108,10 +122,15 @@ export class Poller {
         const id = `${key}-${threshold}`
         if (pct >= threshold && !this.notifiedThresholds.has(id)) {
           this.notifiedThresholds.add(id)
+          const label = key === 'session' ? 'Session' : 'Weekly'
+          // threadId is a real macOS-only runtime property (maps to NSUserNotification.threadIdentifier)
+          // but is missing from Electron 34's NotificationConstructorOptions typings — cast is intentional.
           new Notification({
-            title: 'Claude Usage Gauge',
-            body: `${key === 'session' ? 'Session' : 'Weekly'} usage at ${pct}%`,
-          }).show()
+            title: `${label}: ${pct}%`,
+            subtitle: `Above ${threshold}% threshold`,
+            body: 'Claude usage limit approaching — consider wrapping up.',
+            threadId: `usage-${key}`,
+          } as Electron.NotificationConstructorOptions & { threadId: string }).show()
         } else if (pct < threshold) {
           this.notifiedThresholds.delete(id)
         }

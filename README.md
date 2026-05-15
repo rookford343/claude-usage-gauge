@@ -49,7 +49,7 @@ A macOS menu bar app that shows your real-time Claude AI usage limits as a glanc
 
 ### Install from DMG
 
-1. Download `Claude Usage Gauge-1.1.0-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
+1. Download `Claude Usage Gauge-1.1.1-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
 2. Open the `.dmg` and drag **Claude Usage Gauge** to your Applications folder
 3. On first launch, macOS will block the unsigned app — go to **System Settings → Privacy & Security** and click **"Open Anyway"**
 4. If still blocked: `xattr -dr com.apple.quarantine /Applications/Claude\ Usage\ Gauge.app`
@@ -247,7 +247,12 @@ limitations under the License.
 
 ## Roadmap
 
-### v1.1.0 — Current Release
+### v1.1.1 — Current Release
+- Fix: gauge held 0% after screen lock/sleep — now preserves last known values until next successful poll
+- Fix: notification detail now visible in collapsed banners — percentage and type moved to title; threshold context in subtitle
+- Immediate gauge refresh on screen unlock and system wake (no more 60s wait)
+
+### v1.1.0
 - Desktop notifications at 80% and 95% usage (session and weekly)
 - Auto-launch on macOS login
 - Tray icon theme: System / Dark / Light with automatic OS detection
