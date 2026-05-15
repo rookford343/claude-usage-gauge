@@ -28,21 +28,37 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
     loginWin.loadURL('https://claude.ai/login')
 
     await new Promise<void>((resolve) => {
-      const cookiePoller = setInterval(async () => {
+      let settled = false
+
+      const extractAndFinish = async (): Promise<void> => {
+        if (settled) return
         try {
           const loginSession = session.fromPartition(LOGIN_PARTITION)
-          const cookies = await loginSession.cookies.get({ url: 'https://claude.ai', name: 'sessionKey' })
-          if (cookies.length === 0) return
+          // Get ALL cookies — don't filter by name; claude.ai may use any name
+          const cookies = await loginSession.cookies.get({ url: 'https://claude.ai' })
+          console.log('[claude-usage-gauge] cookies available:', cookies.map((c) => c.name))
 
-          const sessionKey = cookies[0]!.value
-          clearInterval(cookiePoller)
+          // Try known session cookie names, then fall back to longest-value cookie
+          const sessionCookie =
+            cookies.find((c) => c.name === 'sessionKey') ??
+            cookies.find((c) => c.name === '__ssid') ??
+            cookies.find((c) => c.name === 'session') ??
+            cookies.find((c) => c.name.toLowerCase().includes('session') && c.value.length > 20) ??
+            cookies.sort((a, b) => b.value.length - a.value.length)[0]
 
-          // Fetch orgId from bootstrap
+          if (!sessionCookie || sessionCookie.value.length < 10) return
+
+          settled = true
+          const sessionKey = sessionCookie.value
+          const cookieName = sessionCookie.name
+          console.log('[claude-usage-gauge] using cookie:', cookieName)
+
+          // Fetch orgId from bootstrap using whichever cookie name worked
           let orgId = ''
           try {
             const res = await fetch('https://claude.ai/api/bootstrap', {
               headers: {
-                Cookie: `sessionKey=${sessionKey}`,
+                Cookie: `${cookieName}=${sessionKey}`,
                 Accept: 'application/json',
                 Origin: 'https://claude.ai',
                 Referer: 'https://claude.ai/',
@@ -52,8 +68,6 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
             })
             if (res.ok) {
               const data = (await res.json()) as Record<string, unknown>
-              // Try multiple response shapes: {organization: {id}}, {organizations: [{id}]},
-              // {account: {memberships: [{organization: {id}}]}}
               const org =
                 (data['organization'] as Record<string, unknown> | undefined) ??
                 (data['organizations'] as Record<string, unknown>[] | undefined)?.[0] ??
@@ -63,27 +77,45 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
                     | undefined
                 )?.[0]?.['organization'] as Record<string, unknown> | undefined
               orgId = (org?.['id'] as string) ?? (org?.['uuid'] as string) ?? ''
+              console.log('[claude-usage-gauge] orgId:', orgId || '(empty — will retry on poll)')
             }
           } catch {
-            // orgId stays empty; user will see auth error on first poll
+            // orgId stays empty; first poll will surface the error
           }
 
-          auth.storeCredentials(sessionKey, orgId)
-
-          // Clear login partition so session cookie isn't retained
+          auth.storeCredentials(sessionKey, orgId, cookieName)
           await loginSession.clearStorageData()
-          loginWin.close()
+          if (!loginWin.isDestroyed()) loginWin.close()
 
-          mb.window?.webContents.send('auth-complete')
+          // Show the menubar window and send auth-complete
+          mb.showWindow()
+          setTimeout(() => {
+            mb.window?.webContents.send('auth-complete')
+          }, 300)
+
           poller.start()
           resolve()
-        } catch {
-          // Keep polling
+        } catch (err) {
+          console.log('[claude-usage-gauge] extractAndFinish error:', err)
         }
-      }, 500)
+      }
+
+      // Fire on full-page navigation (login redirect to chat)
+      loginWin.webContents.on('did-navigate', (_, url) => {
+        console.log('[claude-usage-gauge] navigated to:', url)
+        if (!url.includes('/login') && !url.includes('/signup')) {
+          void extractAndFinish()
+        }
+      })
+
+      // Fire on SPA in-page navigation
+      loginWin.webContents.on('did-navigate-in-page', (_, url) => {
+        if (!url.includes('/login') && !url.includes('/signup')) {
+          void extractAndFinish()
+        }
+      })
 
       loginWin.on('closed', () => {
-        clearInterval(cookiePoller)
         resolve()
       })
     })

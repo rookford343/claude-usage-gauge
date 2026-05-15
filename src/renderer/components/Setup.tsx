@@ -12,6 +12,14 @@ export default function Setup({ onAuthComplete }: Props): React.ReactElement {
   const [savingKey, setSavingKey] = useState(false)
 
   useEffect(() => {
+    // Check if auth already completed before this component mounted (race with IPC)
+    window.claudeUsage.hasCredentials().then((has) => {
+      if (has) {
+        setConnecting(false)
+        onAuthComplete()
+      }
+    })
+
     window.claudeUsage.onAuthComplete(() => {
       setConnecting(false)
       onAuthComplete()

@@ -57,7 +57,7 @@ export class Poller {
     }
 
     try {
-      const usage = await fetchUsage(creds.sessionKey, creds.orgId)
+      const usage = await fetchUsage(creds.sessionKey, creds.orgId, creds.cookieName)
       this.currentUsage = usage
       recordUsage(usage.session.percentage, usage.weekly.percentage)
       this.updateTray(usage)

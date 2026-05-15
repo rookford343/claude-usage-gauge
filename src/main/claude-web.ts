@@ -18,11 +18,11 @@ function calcPct(used: number | undefined, limit: number | undefined): number {
   return Math.min(100, Math.max(0, ((used ?? 0) / limit) * 100))
 }
 
-export async function fetchUsage(sessionKey: string, orgId: string): Promise<UsageData> {
+export async function fetchUsage(sessionKey: string, orgId: string, cookieName = 'sessionKey'): Promise<UsageData> {
   const url = `https://claude.ai/api/organizations/${orgId}/usage`
   const res = await fetch(url, {
     headers: {
-      Cookie: `sessionKey=${sessionKey}`,
+      Cookie: `${cookieName}=${sessionKey}`,
       Accept: 'application/json',
       'Content-Type': 'application/json',
       Origin: 'https://claude.ai',
