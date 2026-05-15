@@ -32,7 +32,7 @@ export default function HistoryGrid({ days }: Props): React.ReactElement {
     >
       {days.map((day) => {
         const isToday = day.date === today
-        const pct = day.sessionPeak
+        const pct = day.weeklyPeak
         return (
           <div
             key={day.date}

@@ -231,7 +231,7 @@ export default function FullView(): React.ReactElement {
 
         {/* History */}
         <div style={sectionStyle}>
-          <p style={labelStyle}>Usage History — Last 7 Days</p>
+          <p style={labelStyle}>Weekly Usage — Last 7 Days</p>
           <HistoryGrid days={history} />
         </div>
 

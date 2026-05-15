@@ -48,22 +48,31 @@ function drawDonutStyle(ctx: SKRSContext2D, pct: number): void {
 }
 
 function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: number): void {
-  const cy = H / 2
-  // Two donuts, each centered in a 66px half
-  drawDonut(ctx, H / 2, cy, 22, 8, sessionPct)
-  drawDonut(ctx, W - H / 2, cy, 22, 8, weeklyPct)
+  const cy = H / 2  // 33
 
-  // S / W labels below each ring
-  ctx.font = '11px -apple-system, sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'top'
-  ctx.strokeStyle = 'rgba(255,255,255,0.7)'
+  // Stroke 6 (was 8) — inner hole grows from 28px to 38px canvas, making room for S/W letters
+  drawDonut(ctx, H / 2, cy, 22, 6, sessionPct)      // left donut at x=33
+  drawDonut(ctx, W - H / 2, cy, 22, 6, weeklyPct)   // right donut at x=99
+
+  // Vertical "|" separator at canvas center
+  ctx.beginPath()
+  ctx.moveTo(W / 2, cy - 20)
+  ctx.lineTo(W / 2, cy + 20)
+  ctx.strokeStyle = '#666'
   ctx.lineWidth = 2
-  ctx.strokeText('S', H / 2, cy + 25)
-  ctx.strokeText('W', W - H / 2, cy + 25)
-  ctx.fillStyle = '#333'
-  ctx.fillText('S', H / 2, cy + 25)
-  ctx.fillText('W', W - H / 2, cy + 25)
+  ctx.stroke()
+
+  // S / W letters inside each ring — white outline + dark fill for light/dark menu bar
+  ctx.font = 'bold 26px -apple-system, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
+  ctx.lineWidth = 3
+  ctx.strokeText('S', H / 2, cy)
+  ctx.strokeText('W', W - H / 2, cy)
+  ctx.fillStyle = '#111111'
+  ctx.fillText('S', H / 2, cy)
+  ctx.fillText('W', W - H / 2, cy)
 }
 
 function drawDualNumbersStyle(ctx: SKRSContext2D, sessionPct: number): void {
