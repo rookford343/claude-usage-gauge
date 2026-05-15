@@ -64,6 +64,7 @@ export class Poller {
       this.broadcast(usage)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error'
+      console.log('[claude-usage-gauge] poll error:', message)
       const isExpired = message === 'SESSION_EXPIRED'
       this.currentUsage = {
         session: { percentage: 0, messagesRemaining: null, resetsAt: null },

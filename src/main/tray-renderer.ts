@@ -2,7 +2,10 @@ import { nativeImage, type NativeImage } from 'electron'
 import { createCanvas, type SKRSContext2D } from '@napi-rs/canvas'
 import type { DisplayStyle } from './types'
 
-const SIZE = 44 // @2x for Retina — renders at 22pt
+// 66px canvas declared as @3x → renders at 22pt on all Retina displays
+// More pixels-per-point means text and arcs render crisply
+const SIZE = 66
+const SCALE = 3
 
 function usageColor(pct: number): string {
   if (pct < 50) return '#22C55E'
@@ -20,7 +23,7 @@ function drawDonut(
 ): void {
   ctx.beginPath()
   ctx.arc(cx, cy, radius, 0, Math.PI * 2)
-  ctx.strokeStyle = '#444'
+  ctx.strokeStyle = '#555'
   ctx.lineWidth = lineWidth
   ctx.stroke()
 
@@ -37,35 +40,49 @@ function drawDonut(
 function drawDonutStyle(ctx: SKRSContext2D, pct: number): void {
   const cx = SIZE / 2
   const cy = SIZE / 2
-  const radius = SIZE / 2 - 6
-  drawDonut(ctx, cx, cy, radius, 5, pct)
+  // Thinner ring leaves more room for the label
+  const radius = SIZE / 2 - 9
+  drawDonut(ctx, cx, cy, radius, 6, pct)
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = 'bold 10px sans-serif'
+  ctx.font = 'bold 18px -apple-system, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(`${Math.round(pct)}%`, cx, cy)
+  // Show just the number — "%" takes up too much room at this size
+  ctx.fillText(`${Math.round(pct)}`, cx, cy + 1)
 }
 
 function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: number): void {
-  drawDonut(ctx, 12, SIZE / 2, 9, 3, sessionPct)
-  drawDonut(ctx, SIZE - 12, SIZE / 2, 9, 3, weeklyPct)
+  // Each donut occupies ~half the width with a clear gap in the middle
+  // cx=15 and cx=51 gives 36px center-to-center; radius=12 → 12px gap between edges
+  const cy = SIZE / 2
+  drawDonut(ctx, 15, cy, 12, 4, sessionPct)
+  drawDonut(ctx, SIZE - 15, cy, 12, 4, weeklyPct)
+
+  // Small labels below each ring
+  ctx.fillStyle = '#aaa'
+  ctx.font = '9px -apple-system, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'top'
+  ctx.fillText('S', 15, cy + 14)
+  ctx.fillText('W', SIZE - 15, cy + 14)
 }
 
 function drawDualNumbersStyle(ctx: SKRSContext2D, sessionPct: number): void {
+  // Just a colored dot — the actual numbers are set via tray.setTitle()
   const cx = SIZE / 2
   const cy = SIZE / 2
   ctx.beginPath()
-  ctx.arc(cx, cy, 6, 0, Math.PI * 2)
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2)
   ctx.fillStyle = usageColor(sessionPct)
   ctx.fill()
 }
 
 function drawBatteryBarStyle(ctx: SKRSContext2D, pct: number): void {
   const segments = 8
-  const segW = 4
-  const segH = 14
-  const gap = 1
+  const segW = 6
+  const segH = 20
+  const gap = 2
   const totalW = segments * segW + (segments - 1) * gap
   const startX = (SIZE - totalW) / 2
   const startY = (SIZE - segH) / 2
@@ -75,7 +92,7 @@ function drawBatteryBarStyle(ctx: SKRSContext2D, pct: number): void {
     const x = startX + i * (segW + gap)
     ctx.fillStyle = i < filled ? usageColor(pct) : '#444'
     ctx.beginPath()
-    ctx.roundRect(x, startY, segW, segH, 1)
+    ctx.roundRect(x, startY, segW, segH, 2)
     ctx.fill()
   }
 }
@@ -106,5 +123,5 @@ export function drawTrayIcon(
   }
 
   const buf = canvas.toBuffer('image/png')
-  return nativeImage.createFromBuffer(buf, { scaleFactor: 2 })
+  return nativeImage.createFromBuffer(buf, { scaleFactor: SCALE })
 }

@@ -1,21 +1,30 @@
 import type { UsageData } from './types'
 
+// API may return camelCase or snake_case depending on Claude.ai version
+interface LimitBlock {
+  used?: number
+  limit?: number
+  resetsAt?: string
+  reset_at?: string
+  resets_at?: string
+}
+
 interface ClaudeUsageRaw {
-  messageLimit?: {
-    used?: number
-    limit?: number
-    resetsAt?: string
-  }
-  weeklyMessageLimit?: {
-    used?: number
-    limit?: number
-    resetsAt?: string
-  }
+  // camelCase
+  messageLimit?: LimitBlock
+  weeklyMessageLimit?: LimitBlock
+  // snake_case
+  message_limit?: LimitBlock
+  weekly_message_limit?: LimitBlock
 }
 
 function calcPct(used: number | undefined, limit: number | undefined): number {
   if (!limit) return 0
   return Math.min(100, Math.max(0, ((used ?? 0) / limit) * 100))
+}
+
+function resetAt(block: LimitBlock): string | null {
+  return block.resetsAt ?? block.resets_at ?? block.reset_at ?? null
 }
 
 export async function fetchUsage(sessionKey: string, orgId: string, cookieName = 'sessionKey'): Promise<UsageData> {
@@ -33,12 +42,13 @@ export async function fetchUsage(sessionKey: string, orgId: string, cookieName =
   })
 
   if (res.status === 401) throw new Error('SESSION_EXPIRED')
-  if (!res.ok) throw new Error('FETCH_ERROR')
+  if (!res.ok) throw new Error(`FETCH_ERROR:${res.status}`)
 
   const raw = (await res.json()) as ClaudeUsageRaw
+  console.log('[claude-usage-gauge] raw usage response:', JSON.stringify(raw))
 
-  const session = raw.messageLimit ?? {}
-  const weekly = raw.weeklyMessageLimit ?? {}
+  const session = raw.messageLimit ?? raw.message_limit ?? {}
+  const weekly = raw.weeklyMessageLimit ?? raw.weekly_message_limit ?? {}
 
   const sessionPct = calcPct(session.used, session.limit)
   const weeklyPct = calcPct(weekly.used, weekly.limit)
@@ -49,11 +59,11 @@ export async function fetchUsage(sessionKey: string, orgId: string, cookieName =
     session: {
       percentage: Math.round(sessionPct),
       messagesRemaining: remaining,
-      resetsAt: session.resetsAt ?? null,
+      resetsAt: resetAt(session),
     },
     weekly: {
       percentage: Math.round(weeklyPct),
-      resetsAt: weekly.resetsAt ?? null,
+      resetsAt: resetAt(weekly),
     },
     lastUpdated: new Date().toISOString(),
     error: null,
