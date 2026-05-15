@@ -12,9 +12,12 @@ function formatRemaining(iso: string | null): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
-function resetDay(iso: string | null): string {
+function formatWeeklyReset(iso: string | null): string {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-US', { weekday: 'long' })
+  const d = new Date(iso)
+  const day = d.toLocaleDateString('en-US', { weekday: 'short' })
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  return `${day} ${time.toLowerCase()}`
 }
 
 const sectionStyle: React.CSSProperties = {
@@ -153,7 +156,7 @@ export default function FullView(): React.ReactElement {
           <UsageBar
             percentage={usage?.weekly.percentage ?? 0}
             label="Weekly usage"
-            sublabel={`Resets ${resetDay(usage?.weekly.resetsAt ?? null)}`}
+            sublabel={`Resets ${formatWeeklyReset(usage?.weekly.resetsAt ?? null)}`}
           />
         </div>
 

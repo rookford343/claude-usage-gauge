@@ -2,9 +2,11 @@ import { nativeImage, type NativeImage } from 'electron'
 import { createCanvas, type SKRSContext2D } from '@napi-rs/canvas'
 import type { DisplayStyle } from './types'
 
-// 66px canvas declared as @3x → renders at 22pt on all Retina displays
-// More pixels-per-point means text and arcs render crisply
-const SIZE = 66
+// Non-square canvas: 132px wide × 66px tall at @3x → 44pt × 22pt rendered
+// Left half (66px) = donut ring, right half (66px) = percentage text
+// This keeps menu bar height (22pt) while doubling width for a big, readable icon
+const W = 132
+const H = 66
 const SCALE = 3
 
 function usageColor(pct: number): string {
@@ -37,55 +39,66 @@ function drawDonut(
   }
 }
 
-function drawDonutStyle(ctx: SKRSContext2D, pct: number): void {
-  const cx = SIZE / 2
-  const cy = SIZE / 2
-  // Thinner ring leaves more room for the label
-  const radius = SIZE / 2 - 9
-  drawDonut(ctx, cx, cy, radius, 6, pct)
-
-  ctx.fillStyle = '#ffffff'
-  ctx.font = 'bold 18px -apple-system, sans-serif'
+// Draw text with a white outline so it reads on both light and dark menu bars
+function drawLabel(ctx: SKRSContext2D, text: string, x: number, y: number, font: string): void {
+  ctx.font = font
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  // Show just the number — "%" takes up too much room at this size
-  ctx.fillText(`${Math.round(pct)}`, cx, cy + 1)
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
+  ctx.lineWidth = 3
+  ctx.strokeText(text, x, y)
+  ctx.fillStyle = '#111111'
+  ctx.fillText(text, x, y)
+}
+
+function drawDonutStyle(ctx: SKRSContext2D, pct: number): void {
+  const cx = H / 2       // center of left half: 33
+  const cy = H / 2       // vertical center: 33
+  const radius = H / 2 - 7  // 26px — nearly fills the height
+  drawDonut(ctx, cx, cy, radius, 12, pct)  // 12px stroke = 4pt rendered, clearly visible
+
+  // Percentage text in the right half
+  const tx = W * 0.73    // ~96px from left
+  drawLabel(ctx, `${Math.round(pct)}%`, tx, cy, 'bold 26px -apple-system, sans-serif')
 }
 
 function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: number): void {
-  // Each donut occupies ~half the width with a clear gap in the middle
-  // cx=15 and cx=51 gives 36px center-to-center; radius=12 → 12px gap between edges
-  const cy = SIZE / 2
-  drawDonut(ctx, 15, cy, 12, 4, sessionPct)
-  drawDonut(ctx, SIZE - 15, cy, 12, 4, weeklyPct)
+  const cy = H / 2
+  // Two donuts, each centered in a 66px half
+  drawDonut(ctx, H / 2, cy, 22, 8, sessionPct)
+  drawDonut(ctx, W - H / 2, cy, 22, 8, weeklyPct)
 
-  // Small labels below each ring
-  ctx.fillStyle = '#aaa'
-  ctx.font = '9px -apple-system, sans-serif'
+  // S / W labels below each ring
+  ctx.font = '11px -apple-system, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
-  ctx.fillText('S', 15, cy + 14)
-  ctx.fillText('W', SIZE - 15, cy + 14)
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)'
+  ctx.lineWidth = 2
+  ctx.strokeText('S', H / 2, cy + 25)
+  ctx.strokeText('W', W - H / 2, cy + 25)
+  ctx.fillStyle = '#333'
+  ctx.fillText('S', H / 2, cy + 25)
+  ctx.fillText('W', W - H / 2, cy + 25)
 }
 
 function drawDualNumbersStyle(ctx: SKRSContext2D, sessionPct: number): void {
-  // Just a colored dot — the actual numbers are set via tray.setTitle()
-  const cx = SIZE / 2
-  const cy = SIZE / 2
+  // Colored dot only — numbers are set via tray.setTitle()
+  const cx = H / 2
+  const cy = H / 2
   ctx.beginPath()
-  ctx.arc(cx, cy, 8, 0, Math.PI * 2)
+  ctx.arc(cx, cy, 10, 0, Math.PI * 2)
   ctx.fillStyle = usageColor(sessionPct)
   ctx.fill()
 }
 
 function drawBatteryBarStyle(ctx: SKRSContext2D, pct: number): void {
-  const segments = 8
-  const segW = 6
-  const segH = 20
+  const segments = 10
+  const segW = 10
+  const segH = 24
   const gap = 2
   const totalW = segments * segW + (segments - 1) * gap
-  const startX = (SIZE - totalW) / 2
-  const startY = (SIZE - segH) / 2
+  const startX = (W - totalW) / 2
+  const startY = (H - segH) / 2
   const filled = Math.round((pct / 100) * segments)
 
   for (let i = 0; i < segments; i++) {
@@ -102,10 +115,10 @@ export function drawTrayIcon(
   style: DisplayStyle,
   weeklyPct = 0,
 ): NativeImage {
-  const canvas = createCanvas(SIZE, SIZE)
+  const canvas = createCanvas(W, H)
   const ctx = canvas.getContext('2d')
 
-  ctx.clearRect(0, 0, SIZE, SIZE)
+  ctx.clearRect(0, 0, W, H)
 
   switch (style) {
     case 'donut':

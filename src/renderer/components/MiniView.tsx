@@ -15,6 +15,14 @@ function formatRemaining(iso: string | null): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
+function formatWeeklyReset(iso: string | null): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  const day = d.toLocaleDateString('en-US', { weekday: 'short' })
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  return `${day} ${time.toLowerCase()}`
+}
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const s = Math.floor(diff / 1000)
@@ -88,7 +96,7 @@ export default function MiniView({ usage }: Props): React.ReactElement {
               <DonutGauge percentage={usage.weekly.percentage} size={80} />
               <span style={{ fontSize: 11, color: '#888' }}>Weekly</span>
               <span style={{ fontSize: 10, color: '#666' }}>
-                Resets {formatRemaining(usage.weekly.resetsAt)}
+                Resets {formatWeeklyReset(usage.weekly.resetsAt)}
               </span>
             </div>
           </>
