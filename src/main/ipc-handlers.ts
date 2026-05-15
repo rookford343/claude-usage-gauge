@@ -53,36 +53,43 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
           const cookieName = sessionCookie.name
           console.log('[claude-usage-gauge] using cookie:', cookieName)
 
-          // Fetch orgId from bootstrap using whichever cookie name worked
-          let orgId = ''
-          try {
-            const res = await fetch('https://claude.ai/api/bootstrap', {
-              headers: {
-                Cookie: `${cookieName}=${sessionKey}`,
-                Accept: 'application/json',
-                Origin: 'https://claude.ai',
-                Referer: 'https://claude.ai/',
-                'User-Agent':
-                  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-              },
-            })
-            if (res.ok) {
-              const data = (await res.json()) as Record<string, unknown>
-              const org =
-                (data['organization'] as Record<string, unknown> | undefined) ??
-                (data['organizations'] as Record<string, unknown>[] | undefined)?.[0] ??
-                (
-                  (data['account'] as Record<string, unknown> | undefined)?.['memberships'] as
-                    | Record<string, unknown>[]
-                    | undefined
-                )?.[0]?.['organization'] as Record<string, unknown> | undefined
-              const rawId = org?.['id'] ?? org?.['uuid']
-              orgId = rawId != null ? String(rawId) : ''
-              console.log('[claude-usage-gauge] orgId:', orgId || '(empty — will retry on poll)')
+          // Prefer lastActiveOrg cookie — Claude.ai sets this to the org UUID the API expects
+          const lastActiveOrg = cookies.find((c) => c.name === 'lastActiveOrg')
+          let orgId = lastActiveOrg?.value ?? ''
+
+          // Fall back to /api/bootstrap if the cookie didn't have it
+          if (!orgId) {
+            try {
+              const bsRes = await fetch('https://claude.ai/api/bootstrap', {
+                headers: {
+                  Cookie: `${cookieName}=${sessionKey}`,
+                  Accept: 'application/json',
+                  Origin: 'https://claude.ai',
+                  Referer: 'https://claude.ai/',
+                  'User-Agent':
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                },
+              })
+              if (bsRes.ok) {
+                const data = (await bsRes.json()) as Record<string, unknown>
+                console.log('[claude-usage-gauge] bootstrap response:', JSON.stringify(data).slice(0, 800))
+                const org =
+                  (data['organization'] as Record<string, unknown> | undefined) ??
+                  (data['organizations'] as Record<string, unknown>[] | undefined)?.[0] ??
+                  (
+                    (data['account'] as Record<string, unknown> | undefined)?.['memberships'] as
+                      | Record<string, unknown>[]
+                      | undefined
+                  )?.[0]?.['organization'] as Record<string, unknown> | undefined
+                // Prefer uuid over numeric id — usage endpoint requires UUID
+                const rawId = org?.['uuid'] ?? org?.['id']
+                orgId = rawId != null ? String(rawId) : ''
+              }
+            } catch {
+              // orgId stays empty; first poll will surface the error
             }
-          } catch {
-            // orgId stays empty; first poll will surface the error
           }
+          console.log('[claude-usage-gauge] orgId:', orgId || '(empty)')
 
           auth.storeCredentials(sessionKey, orgId, cookieName)
           await loginSession.clearStorageData()

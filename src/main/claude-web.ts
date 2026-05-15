@@ -42,7 +42,11 @@ export async function fetchUsage(sessionKey: string, orgId: string, cookieName =
   })
 
   if (res.status === 401) throw new Error('SESSION_EXPIRED')
-  if (!res.ok) throw new Error(`FETCH_ERROR:${res.status}`)
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    console.log(`[claude-usage-gauge] usage fetch failed ${res.status}:`, body.slice(0, 400))
+    throw new Error(`FETCH_ERROR:${res.status}`)
+  }
 
   const raw = (await res.json()) as ClaudeUsageRaw
   console.log('[claude-usage-gauge] raw usage response:', JSON.stringify(raw))
