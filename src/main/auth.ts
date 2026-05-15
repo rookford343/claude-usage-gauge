@@ -10,15 +10,28 @@ const KEYS = {
   cookieName: 'cookie_name',
 } as const
 
+// Prefix stored alongside base64 so decrypt knows which path to take
+const SAFE_PREFIX = 'safe:'
+const B64_PREFIX = 'b64:'
+
 function encrypt(value: string): string {
-  const buf = safeStorage.encryptString(value)
-  return buf.toString('base64')
+  if (safeStorage.isEncryptionAvailable()) {
+    return SAFE_PREFIX + safeStorage.encryptString(value).toString('base64')
+  }
+  // macOS 26.5 beta — keychain bindings not yet initialized; fall back to base64.
+  // Not cryptographically secure; acceptable only for dev/beta environments.
+  console.warn('[claude-usage-gauge] safeStorage unavailable — credentials stored as base64 (dev/beta only)')
+  return B64_PREFIX + Buffer.from(value).toString('base64')
 }
 
 function decrypt(encoded: string): string | null {
   try {
-    const buf = Buffer.from(encoded, 'base64')
-    return safeStorage.decryptString(buf)
+    if (encoded.startsWith(B64_PREFIX)) {
+      return Buffer.from(encoded.slice(B64_PREFIX.length), 'base64').toString('utf8')
+    }
+    // Legacy entries without prefix and new safe: entries both go through safeStorage
+    const b64 = encoded.startsWith(SAFE_PREFIX) ? encoded.slice(SAFE_PREFIX.length) : encoded
+    return safeStorage.decryptString(Buffer.from(b64, 'base64'))
   } catch {
     return null
   }

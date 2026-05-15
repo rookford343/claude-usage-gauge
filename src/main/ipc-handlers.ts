@@ -76,7 +76,8 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
                     | Record<string, unknown>[]
                     | undefined
                 )?.[0]?.['organization'] as Record<string, unknown> | undefined
-              orgId = (org?.['id'] as string) ?? (org?.['uuid'] as string) ?? ''
+              const rawId = org?.['id'] ?? org?.['uuid']
+              orgId = rawId != null ? String(rawId) : ''
               console.log('[claude-usage-gauge] orgId:', orgId || '(empty — will retry on poll)')
             }
           } catch {
