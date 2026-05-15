@@ -25,6 +25,29 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
         partition: LOGIN_PARTITION,
       },
     })
+    // Intercept in-flight requests from the WebView BEFORE loading the page.
+    // Claude.ai's app makes requests to /api/organizations/<uuid>/... after login —
+    // capture the UUID directly from those URLs (same method the Chrome extension uses).
+    const loginPartitionSession = session.fromPartition(LOGIN_PARTITION)
+    let capturedOrgUuid = ''
+    // UUID regex: standard (8-4-4-4-12 with dashes) or simple (32 hex, no dashes)
+    const UUID_RE = /\/organizations\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{32})/i
+
+    loginPartitionSession.webRequest.onBeforeSendHeaders(
+      { urls: ['https://claude.ai/api/organizations/*'] },
+      (details, callback) => {
+        if (!capturedOrgUuid) {
+          const match = details.url.match(UUID_RE)
+          if (match) {
+            // Strip dashes — API expects simple 32-char format
+            capturedOrgUuid = match[1].replace(/-/g, '')
+            console.log('[claude-usage-gauge] captured org UUID from browser request:', capturedOrgUuid)
+          }
+        }
+        callback({ requestHeaders: details.requestHeaders })
+      },
+    )
+
     loginWin.loadURL('https://claude.ai/login')
 
     await new Promise<void>((resolve) => {
@@ -33,8 +56,10 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
       const extractAndFinish = async (): Promise<void> => {
         if (settled) return
         try {
+          // Wait briefly for the WebView to fire its initial API calls and populate capturedOrgUuid
+          await new Promise((r) => setTimeout(r, 1500))
+
           const loginSession = session.fromPartition(LOGIN_PARTITION)
-          // Get ALL cookies — don't filter by name; claude.ai may use any name
           const cookies = await loginSession.cookies.get({ url: 'https://claude.ai' })
           console.log('[claude-usage-gauge] cookies available:', cookies.map((c) => c.name))
 
@@ -53,11 +78,10 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
           const cookieName = sessionCookie.name
           console.log('[claude-usage-gauge] using cookie:', cookieName)
 
-          // Prefer lastActiveOrg cookie — Claude.ai sets this to the org UUID the API expects
-          const lastActiveOrg = cookies.find((c) => c.name === 'lastActiveOrg')
-          let orgId = lastActiveOrg?.value ?? ''
+          // Primary: UUID captured from in-flight browser requests (most reliable)
+          let orgId = capturedOrgUuid
 
-          // Fall back to /api/bootstrap if the cookie didn't have it
+          // Fallback: /api/bootstrap — log full response so we can debug field names
           if (!orgId) {
             try {
               const bsRes = await fetch('https://claude.ai/api/bootstrap', {
@@ -72,24 +96,20 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
               })
               if (bsRes.ok) {
                 const data = (await bsRes.json()) as Record<string, unknown>
-                console.log('[claude-usage-gauge] bootstrap response:', JSON.stringify(data).slice(0, 800))
-                const org =
-                  (data['organization'] as Record<string, unknown> | undefined) ??
-                  (data['organizations'] as Record<string, unknown>[] | undefined)?.[0] ??
-                  (
-                    (data['account'] as Record<string, unknown> | undefined)?.['memberships'] as
-                      | Record<string, unknown>[]
-                      | undefined
-                  )?.[0]?.['organization'] as Record<string, unknown> | undefined
-                // Prefer uuid over numeric id — usage endpoint requires UUID
-                const rawId = org?.['uuid'] ?? org?.['id']
-                orgId = rawId != null ? String(rawId) : ''
+                console.log('[claude-usage-gauge] bootstrap response:', JSON.stringify(data).slice(0, 1200))
+                // Look for any string value that looks like a UUID anywhere in the response
+                const jsonStr = JSON.stringify(data)
+                const uuidMatch = jsonStr.match(/"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"/i)
+                if (uuidMatch) {
+                  orgId = uuidMatch[1].replace(/-/g, '')
+                  console.log('[claude-usage-gauge] found UUID in bootstrap:', orgId)
+                }
               }
             } catch {
-              // orgId stays empty; first poll will surface the error
+              // orgId stays empty; poll will surface the error
             }
           }
-          console.log('[claude-usage-gauge] orgId:', orgId || '(empty)')
+          console.log('[claude-usage-gauge] orgId:', orgId || '(empty — reconnect needed)')
 
           auth.storeCredentials(sessionKey, orgId, cookieName)
           await loginSession.clearStorageData()
