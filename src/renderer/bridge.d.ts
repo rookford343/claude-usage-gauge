@@ -1,4 +1,4 @@
-import type { UsageData, DayUsage, ApiStatus, DisplayStyle } from '../main/types'
+import type { UsageData, DayUsage, ApiStatus, DisplayStyle, TrayTheme } from '../main/types'
 
 declare global {
   interface Window {
@@ -19,6 +19,13 @@ declare global {
       onUsageUpdated(cb: (data: UsageData) => void): void
       onAuthComplete(cb: () => void): void
       removeAllListeners(channel: string): void
+      setNotifications(enabled: boolean): Promise<void>
+      getNotifications(): Promise<boolean>
+      setAutoLaunch(enabled: boolean): Promise<void>
+      getAutoLaunch(): Promise<boolean>
+      setTheme(theme: TrayTheme): Promise<void>
+      getTheme(): Promise<TrayTheme>
+      exportCsv(): Promise<string | null>
       quit(): Promise<void>
     }
   }

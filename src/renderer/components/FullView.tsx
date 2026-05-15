@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import type { UsageData, DayUsage, ApiStatus, DisplayStyle } from '../../main/types'
+import type { UsageData, DayUsage, ApiStatus, DisplayStyle, TrayTheme } from '../../main/types'
 import UsageBar from './UsageBar'
 import HistoryGrid from './HistoryGrid'
 
@@ -43,22 +43,31 @@ export default function FullView(): React.ReactElement {
   const [history, setHistory] = useState<DayUsage[]>([])
   const [displayStyle, setDisplayStyle] = useState<DisplayStyle>('donut')
   const [pollInterval, setPollInterval] = useState(60)
+  const [theme, setTheme] = useState<TrayTheme>('system')
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+  const [autoLaunch, setAutoLaunch] = useState(false)
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [showKeyInput, setShowKeyInput] = useState(false)
 
   const loadAll = useCallback(async () => {
-    const [u, a, h, style, interval] = await Promise.all([
+    const [u, a, h, style, interval, t, notifs, launch] = await Promise.all([
       window.claudeUsage.getUsage(),
       window.claudeUsage.getApiStatus(),
       window.claudeUsage.getHistory(),
       window.claudeUsage.getDisplayStyle(),
       window.claudeUsage.getPollInterval(),
+      window.claudeUsage.getTheme(),
+      window.claudeUsage.getNotifications(),
+      window.claudeUsage.getAutoLaunch(),
     ])
     setUsage(u)
     setApiStatus(a)
     setHistory(h)
     setDisplayStyle(style)
     setPollInterval(interval)
+    setTheme(t)
+    setNotificationsEnabled(notifs)
+    setAutoLaunch(launch)
   }, [])
 
   useEffect(() => {
@@ -83,6 +92,26 @@ export default function FullView(): React.ReactElement {
     setApiStatus(status)
     setShowKeyInput(false)
     setApiKeyInput('')
+  }
+
+  const handleThemeChange = async (t: TrayTheme): Promise<void> => {
+    setTheme(t)
+    await window.claudeUsage.setTheme(t)
+  }
+
+  const handleNotificationsToggle = async (enabled: boolean): Promise<void> => {
+    setNotificationsEnabled(enabled)
+    await window.claudeUsage.setNotifications(enabled)
+  }
+
+  const handleAutoLaunchToggle = async (enabled: boolean): Promise<void> => {
+    setAutoLaunch(enabled)
+    await window.claudeUsage.setAutoLaunch(enabled)
+  }
+
+  const handleExportCsv = async (): Promise<void> => {
+    const filePath = await window.claudeUsage.exportCsv()
+    if (filePath) alert(`Saved to ${filePath}`)
   }
 
   const handleDisconnect = async (): Promise<void> => {
@@ -279,6 +308,43 @@ export default function FullView(): React.ReactElement {
                 <option value={300}>5m</option>
               </select>
             </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontSize: 12, color: '#888' }}>Tray icon theme</span>
+              <select
+                value={theme}
+                onChange={(e) => handleThemeChange(e.target.value as TrayTheme)}
+                style={{
+                  background: '#252525',
+                  border: '1px solid #444',
+                  borderRadius: 4,
+                  color: '#f0f0f0',
+                  fontSize: 12,
+                  padding: '4px 8px',
+                }}
+              >
+                <option value="system">System</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontSize: 12, color: '#888' }}>Usage notifications</span>
+              <input
+                type="checkbox"
+                checked={notificationsEnabled}
+                onChange={(e) => void handleNotificationsToggle(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontSize: 12, color: '#888' }}>Launch at login</span>
+              <input
+                type="checkbox"
+                checked={autoLaunch}
+                onChange={(e) => void handleAutoLaunchToggle(e.target.checked)}
+                style={{ cursor: 'pointer' }}
+              />
+            </div>
             <button
               onClick={handleDisconnect}
               style={{
@@ -294,6 +360,21 @@ export default function FullView(): React.ReactElement {
               }}
             >
               Disconnect account
+            </button>
+            <button
+              onClick={() => void handleExportCsv()}
+              style={{
+                alignSelf: 'flex-start',
+                background: 'none',
+                border: '1px solid #333',
+                borderRadius: 4,
+                color: '#888',
+                fontSize: 11,
+                padding: '5px 10px',
+                cursor: 'pointer',
+              }}
+            >
+              Export history as CSV
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { app, session, Menu, dialog } from 'electron'
+import { app, session, Menu, dialog, nativeTheme } from 'electron'
 import { menubar } from 'menubar'
 import { join } from 'path'
 import { Poller } from './poller'
@@ -6,7 +6,7 @@ import { registerIpcHandlers } from './ipc-handlers'
 import { hasCredentials } from './auth'
 import { drawTrayIcon } from './tray-renderer'
 import Store from 'electron-store'
-import type { DisplayStyle } from './types'
+import type { DisplayStyle, TrayTheme } from './types'
 
 const prefsStore = new Store({ name: 'prefs' })
 
@@ -15,8 +15,11 @@ app.whenReady().then(() => {
   app.dock?.hide()
   const displayStyle = (prefsStore.get('displayStyle', 'donut') as DisplayStyle)
   const pollInterval = prefsStore.get('pollInterval', 60) as number
+  const theme = prefsStore.get('theme', 'system') as TrayTheme
+  const notificationsEnabled = prefsStore.get('notificationsEnabled', false) as boolean
 
-  const initialIcon = drawTrayIcon(0, displayStyle)
+  const isDark = theme === 'system' ? nativeTheme.shouldUseDarkColors : theme === 'dark'
+  const initialIcon = drawTrayIcon(0, displayStyle, 0, isDark)
 
   const mb = menubar({
     index: process.env['ELECTRON_RENDERER_URL'] ?? `file://${join(__dirname, '../renderer/index.html')}`,
@@ -57,6 +60,12 @@ app.whenReady().then(() => {
     const poller = new Poller(mb.tray!)
     poller.setDisplayStyle(displayStyle)
     poller.setIntervalSeconds(pollInterval)
+    poller.setTheme(theme)
+    poller.setNotificationsEnabled(notificationsEnabled)
+
+    nativeTheme.on('updated', () => {
+      poller.setTheme(prefsStore.get('theme', 'system') as TrayTheme)
+    })
 
     registerIpcHandlers(mb, poller)
 

@@ -1,5 +1,5 @@
-import { BrowserWindow, type Tray } from 'electron'
-import type { DisplayStyle, UsageData } from './types'
+import { BrowserWindow, Notification, nativeTheme, type Tray } from 'electron'
+import type { DisplayStyle, TrayTheme, UsageData } from './types'
 import { getCredentials } from './auth'
 import { fetchUsage } from './claude-web'
 import { recordUsage } from './history-store'
@@ -10,6 +10,9 @@ export class Poller {
   private currentUsage: UsageData | null = null
   private intervalSeconds = 60
   private style: DisplayStyle = 'donut'
+  private theme: TrayTheme = 'system'
+  private notificationsEnabled = false
+  private notifiedThresholds = new Set<string>()
 
   constructor(private tray: Tray) {}
 
@@ -45,8 +48,24 @@ export class Poller {
     }
   }
 
+  setTheme(theme: TrayTheme): void {
+    this.theme = theme
+    if (this.currentUsage) {
+      this.updateTray(this.currentUsage)
+    }
+  }
+
+  setNotificationsEnabled(enabled: boolean): void {
+    this.notificationsEnabled = enabled
+  }
+
   getCurrentUsage(): UsageData | null {
     return this.currentUsage
+  }
+
+  private effectiveIsDark(): boolean {
+    if (this.theme === 'system') return nativeTheme.shouldUseDarkColors
+    return this.theme === 'dark'
   }
 
   private async poll(): Promise<void> {
@@ -60,6 +79,7 @@ export class Poller {
       const usage = await fetchUsage(creds.sessionKey, creds.orgId, creds.cookieName)
       this.currentUsage = usage
       recordUsage(usage.session.percentage, usage.weekly.percentage)
+      this.checkNotifications(usage)
       this.updateTray(usage)
       this.broadcast(usage)
     } catch (err) {
@@ -77,8 +97,35 @@ export class Poller {
     }
   }
 
+  private checkNotifications(usage: UsageData): void {
+    if (!this.notificationsEnabled) return
+    const checks = [
+      { key: 'session', pct: usage.session.percentage },
+      { key: 'weekly', pct: usage.weekly.percentage },
+    ]
+    for (const { key, pct } of checks) {
+      for (const threshold of [80, 95]) {
+        const id = `${key}-${threshold}`
+        if (pct >= threshold && !this.notifiedThresholds.has(id)) {
+          this.notifiedThresholds.add(id)
+          new Notification({
+            title: 'Claude Usage Gauge',
+            body: `${key === 'session' ? 'Session' : 'Weekly'} usage at ${pct}%`,
+          }).show()
+        } else if (pct < threshold) {
+          this.notifiedThresholds.delete(id)
+        }
+      }
+    }
+  }
+
   private updateTray(usage: UsageData): void {
-    const img = drawTrayIcon(usage.session.percentage, this.style, usage.weekly.percentage)
+    const img = drawTrayIcon(
+      usage.session.percentage,
+      this.style,
+      usage.weekly.percentage,
+      this.effectiveIsDark(),
+    )
     this.tray.setImage(img)
     this.tray.setToolTip(
       `Session: ${usage.session.percentage}% | Resets in ${formatRemaining(usage.session.resetsAt)}`,

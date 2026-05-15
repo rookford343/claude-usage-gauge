@@ -1,4 +1,5 @@
 export type DisplayStyle = 'donut' | 'dual-donut' | 'dual-numbers' | 'battery-bar'
+export type TrayTheme = 'light' | 'dark' | 'system'
 
 export interface UsageData {
   session: {

@@ -1,12 +1,12 @@
-import { ipcMain, BrowserWindow, session, app } from 'electron'
+import { ipcMain, BrowserWindow, session, app, dialog } from 'electron'
+import { writeFileSync } from 'fs'
 import { join } from 'path'
 import type { Menubar } from 'menubar'
 import type { Poller } from './poller'
 import * as auth from './auth'
 import * as anthropicApi from './anthropic-api'
 import { getHistory } from './history-store'
-import { drawTrayIcon } from './tray-renderer'
-import type { DisplayStyle } from './types'
+import type { DisplayStyle, TrayTheme } from './types'
 import Store from 'electron-store'
 
 const prefsStore = new Store({ name: 'prefs' })
@@ -201,10 +201,6 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
   ipcMain.handle('set-display-style', (_event, style: DisplayStyle) => {
     prefsStore.set('displayStyle', style)
     poller.setDisplayStyle(style)
-    const usage = poller.getCurrentUsage()
-    if (usage && mb.tray) {
-      mb.tray.setImage(drawTrayIcon(usage.session.percentage, style, usage.weekly.percentage))
-    }
   })
 
   ipcMain.handle('set-poll-interval', (_event, seconds: number) => {
@@ -214,6 +210,41 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
 
   ipcMain.handle('get-display-style', () => prefsStore.get('displayStyle', 'donut') as DisplayStyle)
   ipcMain.handle('get-poll-interval', () => prefsStore.get('pollInterval', 60) as number)
+
+  ipcMain.handle('set-notifications', (_event, enabled: boolean) => {
+    prefsStore.set('notificationsEnabled', enabled)
+    poller.setNotificationsEnabled(enabled)
+  })
+  ipcMain.handle('get-notifications', () => prefsStore.get('notificationsEnabled', false) as boolean)
+
+  ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {
+    app.setLoginItemSettings({ openAtLogin: enabled })
+  })
+  ipcMain.handle('get-auto-launch', () => app.getLoginItemSettings().openAtLogin)
+
+  ipcMain.handle('set-theme', (_event, theme: TrayTheme) => {
+    prefsStore.set('theme', theme)
+    poller.setTheme(theme)
+  })
+  ipcMain.handle('get-theme', () => prefsStore.get('theme', 'system') as TrayTheme)
+
+  ipcMain.handle('export-csv', async () => {
+    const days = getHistory()
+    const header = 'Date,Session Peak %,Weekly Peak %'
+    const rows = days.map((d) => `${d.date},${d.sessionPeak},${d.weeklyPeak}`)
+    const csv = [header, ...rows].join('\n')
+    const defaultPath = join(
+      app.getPath('downloads'),
+      `claude-usage-${new Date().toISOString().slice(0, 10)}.csv`,
+    )
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      defaultPath,
+      filters: [{ name: 'CSV', extensions: ['csv'] }],
+    })
+    if (canceled || !filePath) return null
+    writeFileSync(filePath, csv, 'utf8')
+    return filePath
+  })
 
   ipcMain.handle('quit', () => app.quit())
 }

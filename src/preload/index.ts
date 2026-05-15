@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { UsageData, DayUsage, ApiStatus, DisplayStyle } from '../main/types'
+import type { UsageData, DayUsage, ApiStatus, DisplayStyle, TrayTheme } from '../main/types'
 
 const bridge = {
   hasCredentials: (): Promise<boolean> =>
@@ -52,6 +52,17 @@ const bridge = {
   removeAllListeners: (channel: string): void => {
     ipcRenderer.removeAllListeners(channel)
   },
+
+  setNotifications: (enabled: boolean): Promise<void> => ipcRenderer.invoke('set-notifications', enabled),
+  getNotifications: (): Promise<boolean> => ipcRenderer.invoke('get-notifications'),
+
+  setAutoLaunch: (enabled: boolean): Promise<void> => ipcRenderer.invoke('set-auto-launch', enabled),
+  getAutoLaunch: (): Promise<boolean> => ipcRenderer.invoke('get-auto-launch'),
+
+  setTheme: (theme: TrayTheme): Promise<void> => ipcRenderer.invoke('set-theme', theme),
+  getTheme: (): Promise<TrayTheme> => ipcRenderer.invoke('get-theme'),
+
+  exportCsv: (): Promise<string | null> => ipcRenderer.invoke('export-csv'),
 
   quit: (): Promise<void> => ipcRenderer.invoke('quit'),
 }
