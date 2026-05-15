@@ -2,9 +2,11 @@ import { nativeImage, type NativeImage } from 'electron'
 import { createCanvas, type SKRSContext2D } from '@napi-rs/canvas'
 import type { DisplayStyle } from './types'
 
-// Wide canvas (132×66 @3x) for dual-donut and battery-bar styles
+// Wide canvas (132×66 @3x) for battery-bar
+// Extra-wide canvas (192×66 @3x = 64pt) for dual-donut — flanking numbers need the room
 // Square canvas (66×66 @3x) for donut and dual-numbers — text shown via tray.setTitle()
 const W = 132
+const WD = 192  // dual-donut canvas width
 const H = 66
 const SCALE = 3
 
@@ -47,32 +49,48 @@ function drawDonutStyle(ctx: SKRSContext2D, pct: number): void {
   drawDonut(ctx, cx, cy, radius, 12, pct)
 }
 
+// Draw outlined text readable on both light and dark menu bars
+function drawOutlinedText(ctx: SKRSContext2D, text: string, x: number, y: number): void {
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
+  ctx.lineWidth = 3
+  ctx.strokeText(text, x, y)
+  ctx.fillStyle = '#111111'
+  ctx.fillText(text, x, y)
+}
+
 function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: number): void {
   const cy = H / 2  // 33
+  // Canvas is WD=192. Donuts shifted inward so numbers fit on the outside.
+  // Outer edge of each ring = cx ± (radius + stroke/2) = cx ± 27
+  // Number zone: 0–40 (session) and 152–192 (weekly) — 40px each
+  // Donut centers: x=67 (session) and x=125 (weekly), divider at x=96
+  const cxS = 67   // session donut center
+  const cxW = 125  // weekly donut center
 
-  // Stroke 6 (was 8) — inner hole grows from 28px to 38px canvas, making room for S/W letters
-  drawDonut(ctx, H / 2, cy, 22, 6, sessionPct)      // left donut at x=33
-  drawDonut(ctx, W - H / 2, cy, 22, 6, weeklyPct)   // right donut at x=99
+  // Thick rings — stroke 10 for better visibility at arm's length
+  drawDonut(ctx, cxS, cy, 22, 10, sessionPct)
+  drawDonut(ctx, cxW, cy, 22, 10, weeklyPct)
 
   // Vertical "|" separator at canvas center
   ctx.beginPath()
-  ctx.moveTo(W / 2, cy - 20)
-  ctx.lineTo(W / 2, cy + 20)
+  ctx.moveTo(WD / 2, cy - 20)
+  ctx.lineTo(WD / 2, cy + 20)
   ctx.strokeStyle = '#666'
   ctx.lineWidth = 2
   ctx.stroke()
 
-  // S / W letters inside each ring — white outline + dark fill for light/dark menu bar
-  ctx.font = 'bold 26px -apple-system, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
-  ctx.lineWidth = 3
-  ctx.strokeText('S', H / 2, cy)
-  ctx.strokeText('W', W - H / 2, cy)
-  ctx.fillStyle = '#111111'
-  ctx.fillText('S', H / 2, cy)
-  ctx.fillText('W', W - H / 2, cy)
+
+  // S / W letters inside each ring (inner hole diameter ≈ 24px canvas with stroke=10)
+  ctx.font = 'bold 18px -apple-system, sans-serif'
+  drawOutlinedText(ctx, 'S', cxS, cy)
+  drawOutlinedText(ctx, 'W', cxW, cy)
+
+  // Session % on the left, weekly % on the right
+  ctx.font = 'bold 22px -apple-system, sans-serif'
+  drawOutlinedText(ctx, `${sessionPct}%`, 20, cy)
+  drawOutlinedText(ctx, `${weeklyPct}%`, WD - 20, cy)
 }
 
 function drawDualNumbersStyle(ctx: SKRSContext2D, sessionPct: number): void {
@@ -112,7 +130,7 @@ export function drawTrayIcon(
 ): NativeImage {
   // Donut and dual-numbers use a square canvas — text is rendered via tray.setTitle()
   // Dual-donut and battery-bar need the full wide canvas for their layout
-  const canvasW = style === 'dual-donut' || style === 'battery-bar' ? W : H
+  const canvasW = style === 'dual-donut' ? WD : style === 'battery-bar' ? W : H
   const canvas = createCanvas(canvasW, H)
   const ctx = canvas.getContext('2d')
 

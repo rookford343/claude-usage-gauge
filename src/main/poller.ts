@@ -83,7 +83,7 @@ export class Poller {
     this.tray.setToolTip(
       `Session: ${usage.session.percentage}% | Resets in ${formatRemaining(usage.session.resetsAt)}`,
     )
-    if (this.style === 'dual-numbers' || this.style === 'dual-donut') {
+    if (this.style === 'dual-numbers') {
       this.tray.setTitle(`${usage.session.percentage}%·${usage.weekly.percentage}%`)
     } else if (this.style === 'donut') {
       this.tray.setTitle(`${usage.session.percentage}%`)
