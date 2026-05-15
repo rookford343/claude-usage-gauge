@@ -35,6 +35,12 @@ const bridge = {
   setPollInterval: (seconds: number): Promise<void> =>
     ipcRenderer.invoke('set-poll-interval', seconds),
 
+  getDisplayStyle: (): Promise<DisplayStyle> =>
+    ipcRenderer.invoke('get-display-style'),
+
+  getPollInterval: (): Promise<number> =>
+    ipcRenderer.invoke('get-poll-interval'),
+
   onUsageUpdated: (cb: (data: UsageData) => void): void => {
     ipcRenderer.on('usage-updated', (_event, data: UsageData) => cb(data))
   },

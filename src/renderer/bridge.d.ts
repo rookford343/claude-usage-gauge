@@ -14,6 +14,8 @@ declare global {
       getHistory(): Promise<DayUsage[]>
       setDisplayStyle(style: DisplayStyle): Promise<void>
       setPollInterval(seconds: number): Promise<void>
+      getDisplayStyle(): Promise<DisplayStyle>
+      getPollInterval(): Promise<number>
       onUsageUpdated(cb: (data: UsageData) => void): void
       onAuthComplete(cb: () => void): void
       removeAllListeners(channel: string): void

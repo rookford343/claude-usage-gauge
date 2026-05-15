@@ -2,9 +2,8 @@ import { nativeImage, type NativeImage } from 'electron'
 import { createCanvas, type SKRSContext2D } from '@napi-rs/canvas'
 import type { DisplayStyle } from './types'
 
-// Non-square canvas: 132px wide × 66px tall at @3x → 44pt × 22pt rendered
-// Left half (66px) = donut ring, right half (66px) = percentage text
-// This keeps menu bar height (22pt) while doubling width for a big, readable icon
+// Wide canvas (132×66 @3x) for dual-donut and battery-bar styles
+// Square canvas (66×66 @3x) for donut and dual-numbers — text shown via tray.setTitle()
 const W = 132
 const H = 66
 const SCALE = 3
@@ -39,27 +38,13 @@ function drawDonut(
   }
 }
 
-// Draw text with a white outline so it reads on both light and dark menu bars
-function drawLabel(ctx: SKRSContext2D, text: string, x: number, y: number, font: string): void {
-  ctx.font = font
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)'
-  ctx.lineWidth = 3
-  ctx.strokeText(text, x, y)
-  ctx.fillStyle = '#111111'
-  ctx.fillText(text, x, y)
-}
 
 function drawDonutStyle(ctx: SKRSContext2D, pct: number): void {
-  const cx = H / 2       // center of left half: 33
-  const cy = H / 2       // vertical center: 33
-  const radius = H / 2 - 7  // 26px — nearly fills the height
-  drawDonut(ctx, cx, cy, radius, 12, pct)  // 12px stroke = 4pt rendered, clearly visible
-
-  // Percentage text in the right half
-  const tx = W * 0.73    // ~96px from left
-  drawLabel(ctx, `${Math.round(pct)}%`, tx, cy, 'bold 26px -apple-system, sans-serif')
+  // Square canvas (H×H) — text is shown via tray.setTitle(), not drawn here
+  const cx = H / 2
+  const cy = H / 2
+  const radius = H / 2 - 7
+  drawDonut(ctx, cx, cy, radius, 12, pct)
 }
 
 function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: number): void {
@@ -82,11 +67,12 @@ function drawDualDonutStyle(ctx: SKRSContext2D, sessionPct: number, weeklyPct: n
 }
 
 function drawDualNumbersStyle(ctx: SKRSContext2D, sessionPct: number): void {
-  // Colored dot only — numbers are set via tray.setTitle()
+  // Colored dot in a square canvas (H×H) — numbers are set via tray.setTitle()
+  // Dot is centered so it sits immediately left of the setTitle text
   const cx = H / 2
   const cy = H / 2
   ctx.beginPath()
-  ctx.arc(cx, cy, 10, 0, Math.PI * 2)
+  ctx.arc(cx, cy, 14, 0, Math.PI * 2)  // 14px radius = 4.7pt rendered — clearly visible
   ctx.fillStyle = usageColor(sessionPct)
   ctx.fill()
 }
@@ -115,10 +101,13 @@ export function drawTrayIcon(
   style: DisplayStyle,
   weeklyPct = 0,
 ): NativeImage {
-  const canvas = createCanvas(W, H)
+  // Donut and dual-numbers use a square canvas — text is rendered via tray.setTitle()
+  // Dual-donut and battery-bar need the full wide canvas for their layout
+  const canvasW = style === 'dual-donut' || style === 'battery-bar' ? W : H
+  const canvas = createCanvas(canvasW, H)
   const ctx = canvas.getContext('2d')
 
-  ctx.clearRect(0, 0, W, H)
+  ctx.clearRect(0, 0, canvasW, H)
 
   switch (style) {
     case 'donut':

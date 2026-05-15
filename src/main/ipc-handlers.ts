@@ -167,7 +167,7 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
     const win = new BrowserWindow({
       width: 480,
       height: 560,
-      titleBarStyle: 'hiddenInset',
+      frame: false,
       resizable: false,
       webPreferences: {
         nodeIntegration: false,
@@ -211,4 +211,7 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
     prefsStore.set('pollInterval', seconds)
     poller.setIntervalSeconds(seconds)
   })
+
+  ipcMain.handle('get-display-style', () => prefsStore.get('displayStyle', 'donut') as DisplayStyle)
+  ipcMain.handle('get-poll-interval', () => prefsStore.get('pollInterval', 60) as number)
 }

@@ -8,19 +8,16 @@
 
 **Polling cadence:** Every 60 seconds (configurable: 30s, 60s, 120s, 300s); also polled immediately on launch and on manual refresh.
 
-**Response shape (observed from Chrome extension reverse-engineering):**
+**Response shape (observed from live traffic):**
 ```json
 {
-  "messageLimit": {
-    "used": 42,
-    "limit": 100,
-    "resetsAt": "2026-05-14T20:00:00.000Z",
-    "type": "5_hour_window"
+  "five_hour": {
+    "utilization": 18,
+    "resets_at": "2026-05-15T03:00:00.000Z"
   },
-  "weeklyMessageLimit": {
-    "used": 78,
-    "limit": 100,
-    "resetsAt": "2026-05-19T00:00:00.000Z"
+  "seven_day": {
+    "utilization": 25,
+    "resets_at": "2026-05-20T00:00:00.000Z"
   }
 }
 ```
@@ -28,9 +25,9 @@
 **Important:** This endpoint is internal and undocumented. Anthropic may change the response shape without notice. The app parses defensively — if any field is missing, it defaults to 0 rather than crashing.
 
 **Computed values:**
-- `percentage = (used / limit) * 100`, clamped 0–100
-- `messagesRemaining = limit - used` (shown in Full View)
-- `resetsAt` is used to compute countdown timers
+- `percentage = utilization`, already a 0–100 value (no division needed), clamped 0–100
+- `messagesRemaining` is not available from this endpoint (shown as `null` in Full View)
+- `resets_at` is used to compute countdown timers and exact clock times
 
 ## Claude.ai bootstrap endpoint
 
@@ -69,6 +66,6 @@ Called once when the user saves an API key.
 
 ## Local storage (no network)
 
-**7-day usage history** is stored locally in `~/Library/Application Support/claude-usage-bar/history.json`. One entry per day, containing the peak session and weekly percentage seen that day. No data leaves the device.
+**7-day usage history** is stored locally in `~/Library/Application Support/Claude Usage Gauge/history.json`. One entry per day, containing the peak session and weekly percentage seen that day. No data leaves the device.
 
-**Preferences** (display style, poll interval) are stored in `~/Library/Application Support/claude-usage-bar/prefs.json`. No data leaves the device.
+**Preferences** (display style, poll interval) are stored in `~/Library/Application Support/Claude Usage Gauge/prefs.json`. No data leaves the device.

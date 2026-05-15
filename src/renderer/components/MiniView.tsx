@@ -8,11 +8,14 @@ interface Props {
 
 function formatRemaining(iso: string | null): string {
   if (!iso) return '—'
-  const diff = new Date(iso).getTime() - Date.now()
+  const d = new Date(iso)
+  const diff = d.getTime() - Date.now()
   if (diff <= 0) return 'soon'
   const h = Math.floor(diff / 3_600_000)
   const m = Math.floor((diff % 3_600_000) / 60_000)
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
+  const countdown = h > 0 ? `${h}h ${m}m` : `${m}m`
+  const clock = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  return `${countdown} (${clock.toLowerCase()})`
 }
 
 function formatWeeklyReset(iso: string | null): string {
@@ -66,7 +69,7 @@ export default function MiniView({ usage }: Props): React.ReactElement {
         }}
       >
         <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#f0f0f0' }}>
-          Claude Usage Bar
+          Claude Usage Gauge
         </span>
         <button onClick={handleRefresh} title="Refresh" style={btn}>↺</button>
         <button onClick={handleFullView} title="Full view" style={btn}>⚙</button>

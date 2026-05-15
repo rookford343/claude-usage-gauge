@@ -1,8 +1,8 @@
-# Claude Usage Bar — User Guide
+# Claude Usage Gauge — User Guide
 
 ## First-run authentication
 
-1. Launch the app (`bun run dev` or open the installed .app)
+1. Launch the app (open the installed .app, or `bun run dev` in dev mode)
 2. A small icon appears in your macOS menu bar
 3. Click the icon → the mini popup appears with a **Connect Claude.ai** button
 4. Click it — a login window opens with claude.ai
@@ -20,7 +20,7 @@
 | Yellow | Session usage 50–80% |
 | Red | Session usage above 80% |
 
-The icon fills clockwise (donut style) or fills segments (battery style) as usage increases.
+The icon fills clockwise (donut/dual-donut styles) or fills segments (battery style) as usage increases.
 
 ## Display styles
 
@@ -28,18 +28,20 @@ Switch styles in Settings (Full View → Settings section):
 
 | Style | What it shows |
 |-------|--------------|
-| **Donut** (default) | Single arc donut — session usage + percentage label |
-| **Dual Donut** | Two smaller donuts side-by-side — session (left) + weekly (right) |
-| **Dual Numbers** | `42%·78%` text in the menu bar (no image) |
-| **Battery Bar** | 8-segment horizontal bar — familiar macOS battery look |
+| **Donut** (default) | Ring arc in the menu bar + native `%` text label to its right (e.g. `🔵 18%`) |
+| **Dual Donut** | Two smaller arcs side-by-side — session (left) + weekly (right), labeled S / W |
+| **Dual Numbers** | Colored status dot + `42%·78%` text immediately to its right |
+| **Battery Bar** | 10-segment horizontal bar — familiar macOS battery look, session usage |
 
 ## Mini popup
 
 Click the tray icon to open the mini popup (320×240px):
 
-- **Left donut** — session limit (5-hour window)
-- **Right donut** — weekly limit
-- **Reset countdowns** — time remaining under each gauge ("Resets in 2h 14m")
+- **Left donut** — session limit (5-hour window), percentage shown in center
+- **Right donut** — weekly limit, percentage shown in center
+- **Reset countdowns** — time remaining + exact clock time under each gauge (e.g. `Resets 2h 14m (3:00 pm)`)
+  - Session uses countdown + clock time (5-hour window)
+  - Weekly uses day + clock time (e.g. `Resets Sun 11:00 pm`)
 - **↺ button** — forces an immediate refresh
 - **⚙ button / Full View →** — opens the expanded Full View window
 - **● dot** — Anthropic API key status (green = valid, red = invalid, gray = not configured)
@@ -48,11 +50,11 @@ Click the tray icon to open the mini popup (320×240px):
 
 Click **Full View →** or ⚙ to open the expanded 480×560px window:
 
-- **Session Limit** — progress bar + messages remaining estimate + reset time
-- **Weekly Limit** — progress bar + reset day
+- **Session Limit** — progress bar + messages remaining estimate + reset time (countdown + exact clock)
+- **Weekly Limit** — progress bar + reset day and time (e.g. `Resets Sun 11:00 pm`)
 - **Anthropic API** — key validity status. Click "Enter key" to add an API key.
 - **Usage History** — 7-day grid showing peak session usage per day
-- **Settings** — display style, poll interval, disconnect button
+- **Settings** — display style and poll interval; both dropdowns load your last-saved values on open
 
 ## Anthropic API key (optional)
 
@@ -71,12 +73,12 @@ Controls how often the app checks Claude.ai for updated usage. Default is 60s.
 
 Available intervals: 30s, 60s, 2m, 5m
 
-Change in Full View → Settings.
+Change in Full View → Settings. The setting persists across restarts.
 
 ## Troubleshooting
 
 ### "Session expired — reconnect" shows in the popup
-Your Claude.ai session cookie has expired. Click **Connect Claude.ai** in Setup (the tray popup will show a reconnect button when session is expired) to log in again.
+Your Claude.ai session cookie has expired. Click the tray icon → Setup to log in again.
 
 ### Usage shows 0% / no data
 - Check that you're connected to the internet
@@ -84,11 +86,11 @@ Your Claude.ai session cookie has expired. Click **Connect Claude.ai** in Setup 
 - If it persists, disconnect and reconnect your account
 
 ### Tray icon doesn't appear
-- Check System Preferences → Privacy & Security → Screen Recording isn't blocking the app (shouldn't be needed, but some configs interfere)
-- Quit and relaunch
+- Quit and relaunch the app
+- Check System Settings → Privacy & Security if macOS blocked the app on first launch
 
 ### App says "Not configured" for API
-The Anthropic API key section is optional. If you only use Claude.ai Pro/Max and don't have an Anthropic API key, you can ignore this section.
+The Anthropic API key section is optional. If you only use Claude.ai Pro/Max and don't have an Anthropic API key, you can ignore this section entirely.
 
 ## Disconnecting
 

@@ -23,44 +23,49 @@ export default function DonutGauge({ percentage, size, label }: Props): React.Re
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-      <svg width={size} height={size}>
-        {/* Background track */}
-        <circle
-          cx={cx}
-          cy={cy}
-          r={radius}
-          fill="none"
-          stroke="#333"
-          strokeWidth={strokeWidth}
-        />
-        {/* Usage arc */}
-        <circle
-          cx={cx}
-          cy={cy}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashoffset}
-          transform={`rotate(-90 ${cx} ${cy})`}
-          style={{ transition: 'stroke-dashoffset 0.4s ease' }}
-        />
-        {/* Center text */}
-        <text
-          x={cx}
-          y={cy}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill="#f0f0f0"
-          fontSize={size * 0.18}
-          fontFamily="-apple-system, sans-serif"
-          fontWeight="600"
+      <div style={{ position: 'relative', display: 'inline-block', width: size, height: size }}>
+        <svg width={size} height={size}>
+          {/* Background track */}
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius}
+            fill="none"
+            stroke="#333"
+            strokeWidth={strokeWidth}
+          />
+          {/* Usage arc */}
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashoffset}
+            transform={`rotate(-90 ${cx} ${cy})`}
+            style={{ transition: 'stroke-dashoffset 0.4s ease' }}
+          />
+        </svg>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: size * 0.22,
+            fontWeight: 600,
+            color: '#f0f0f0',
+            fontFamily: '-apple-system, sans-serif',
+            pointerEvents: 'none',
+          }}
         >
           {Math.round(percentage)}%
-        </text>
-      </svg>
+        </div>
+      </div>
       {label && (
         <span style={{ fontSize: 11, color: '#888', letterSpacing: 0.3 }}>{label}</span>
       )}

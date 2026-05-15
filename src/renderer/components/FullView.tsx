@@ -5,11 +5,14 @@ import HistoryGrid from './HistoryGrid'
 
 function formatRemaining(iso: string | null): string {
   if (!iso) return '—'
-  const diff = new Date(iso).getTime() - Date.now()
+  const d = new Date(iso)
+  const diff = d.getTime() - Date.now()
   if (diff <= 0) return 'now'
   const h = Math.floor(diff / 3_600_000)
   const m = Math.floor((diff % 3_600_000) / 60_000)
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
+  const countdown = h > 0 ? `${h}h ${m}m` : `${m}m`
+  const clock = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  return `${countdown} (${clock.toLowerCase()})`
 }
 
 function formatWeeklyReset(iso: string | null): string {
@@ -44,14 +47,18 @@ export default function FullView(): React.ReactElement {
   const [showKeyInput, setShowKeyInput] = useState(false)
 
   const loadAll = useCallback(async () => {
-    const [u, a, h] = await Promise.all([
+    const [u, a, h, style, interval] = await Promise.all([
       window.claudeUsage.getUsage(),
       window.claudeUsage.getApiStatus(),
       window.claudeUsage.getHistory(),
+      window.claudeUsage.getDisplayStyle(),
+      window.claudeUsage.getPollInterval(),
     ])
     setUsage(u)
     setApiStatus(a)
     setHistory(h)
+    setDisplayStyle(style)
+    setPollInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -113,7 +120,7 @@ export default function FullView(): React.ReactElement {
           WebkitAppRegion: 'drag' as React.CSSProperties['WebkitAppRegion'],
         }}
       >
-        <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>Claude Usage Bar</span>
+        <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>Claude Usage Gauge</span>
         <button
           onClick={() => window.close()}
           style={{

@@ -14,7 +14,7 @@ All sensitive values — the Claude.ai `sessionKey` cookie, `orgId`, and any Ant
 
 ### What this means in practice
 
-- The `electron-store` JSON file on disk (at `~/Library/Application Support/claude-usage-bar/`) contains only opaque base64 blobs — not plaintext session tokens or API keys
+- The `electron-store` JSON file on disk (at `~/Library/Application Support/Claude Usage Gauge/`) contains only opaque base64 blobs — not plaintext session tokens or API keys
 - No credential can be read from the store file without the macOS Keychain
 - Credentials are never written to logs, console output, or error messages
 

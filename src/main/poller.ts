@@ -85,6 +85,8 @@ export class Poller {
     )
     if (this.style === 'dual-numbers') {
       this.tray.setTitle(`${usage.session.percentage}%·${usage.weekly.percentage}%`)
+    } else if (this.style === 'donut') {
+      this.tray.setTitle(`${usage.session.percentage}%`)
     } else {
       this.tray.setTitle('')
     }
