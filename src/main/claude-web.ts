@@ -1,30 +1,14 @@
 import type { UsageData } from './types'
 
-// API may return camelCase or snake_case depending on Claude.ai version
-interface LimitBlock {
-  used?: number
-  limit?: number
-  resetsAt?: string
-  reset_at?: string
-  resets_at?: string
+// Actual API response shape from claude.ai/api/organizations/<uuid>/usage
+interface UsageWindow {
+  utilization: number | null  // already a 0-100 percentage
+  resets_at: string | null
 }
 
 interface ClaudeUsageRaw {
-  // camelCase
-  messageLimit?: LimitBlock
-  weeklyMessageLimit?: LimitBlock
-  // snake_case
-  message_limit?: LimitBlock
-  weekly_message_limit?: LimitBlock
-}
-
-function calcPct(used: number | undefined, limit: number | undefined): number {
-  if (!limit) return 0
-  return Math.min(100, Math.max(0, ((used ?? 0) / limit) * 100))
-}
-
-function resetAt(block: LimitBlock): string | null {
-  return block.resetsAt ?? block.resets_at ?? block.reset_at ?? null
+  five_hour: UsageWindow | null     // session limit (5-hour rolling window)
+  seven_day: UsageWindow | null     // weekly limit
 }
 
 export async function fetchUsage(sessionKey: string, orgId: string, cookieName = 'sessionKey'): Promise<UsageData> {
@@ -49,25 +33,19 @@ export async function fetchUsage(sessionKey: string, orgId: string, cookieName =
   }
 
   const raw = (await res.json()) as ClaudeUsageRaw
-  console.log('[claude-usage-gauge] raw usage response:', JSON.stringify(raw))
 
-  const session = raw.messageLimit ?? raw.message_limit ?? {}
-  const weekly = raw.weeklyMessageLimit ?? raw.weekly_message_limit ?? {}
-
-  const sessionPct = calcPct(session.used, session.limit)
-  const weeklyPct = calcPct(weekly.used, weekly.limit)
-  const remaining =
-    session.limit != null && session.used != null ? session.limit - session.used : null
+  const sessionPct = Math.round(Math.min(100, Math.max(0, raw.five_hour?.utilization ?? 0)))
+  const weeklyPct = Math.round(Math.min(100, Math.max(0, raw.seven_day?.utilization ?? 0)))
 
   return {
     session: {
-      percentage: Math.round(sessionPct),
-      messagesRemaining: remaining,
-      resetsAt: resetAt(session),
+      percentage: sessionPct,
+      messagesRemaining: null,  // API returns utilization %, not used/limit counts
+      resetsAt: raw.five_hour?.resets_at ?? null,
     },
     weekly: {
-      percentage: Math.round(weeklyPct),
-      resetsAt: resetAt(weekly),
+      percentage: weeklyPct,
+      resetsAt: raw.seven_day?.resets_at ?? null,
     },
     lastUpdated: new Date().toISOString(),
     error: null,
