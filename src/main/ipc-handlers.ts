@@ -214,4 +214,6 @@ export function registerIpcHandlers(mb: Menubar, poller: Poller): void {
 
   ipcMain.handle('get-display-style', () => prefsStore.get('displayStyle', 'donut') as DisplayStyle)
   ipcMain.handle('get-poll-interval', () => prefsStore.get('pollInterval', 60) as number)
+
+  ipcMain.handle('quit', () => app.quit())
 }

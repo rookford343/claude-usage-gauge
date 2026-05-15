@@ -38,7 +38,7 @@ const btn: React.CSSProperties = {
   background: 'none',
   border: 'none',
   color: '#888',
-  fontSize: 13,
+  fontSize: 18,
   cursor: 'pointer',
   padding: '2px 6px',
   borderRadius: 4,
@@ -128,6 +128,14 @@ export default function MiniView({ usage }: Props): React.ReactElement {
           style={{ ...btn, fontSize: 10, color: '#666' }}
         >
           Full View →
+        </button>
+        <button
+          onClick={() => {
+            if (window.confirm('Quit Claude Usage Gauge?')) void window.claudeUsage.quit()
+          }}
+          style={{ ...btn, fontSize: 10, color: '#666' }}
+        >
+          Quit
         </button>
       </div>
     </div>

@@ -52,6 +52,8 @@ const bridge = {
   removeAllListeners: (channel: string): void => {
     ipcRenderer.removeAllListeners(channel)
   },
+
+  quit: (): Promise<void> => ipcRenderer.invoke('quit'),
 }
 
 contextBridge.exposeInMainWorld('claudeUsage', bridge)

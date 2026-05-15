@@ -1,4 +1,4 @@
-import { app, session } from 'electron'
+import { app, session, Menu, dialog } from 'electron'
 import { menubar } from 'menubar'
 import { join } from 'path'
 import { Poller } from './poller'
@@ -59,6 +59,25 @@ app.whenReady().then(() => {
     poller.setIntervalSeconds(pollInterval)
 
     registerIpcHandlers(mb, poller)
+
+    const quitMenu = Menu.buildFromTemplate([
+      {
+        label: 'Quit Claude Usage Gauge',
+        click: async () => {
+          const { response } = await dialog.showMessageBox({
+            type: 'question',
+            buttons: ['Quit', 'Cancel'],
+            defaultId: 0,
+            cancelId: 1,
+            message: 'Quit Claude Usage Gauge?',
+          })
+          if (response === 0) app.quit()
+        },
+      },
+    ])
+    mb.tray!.on('right-click', () => {
+      mb.tray!.popUpContextMenu(quitMenu)
+    })
 
     if (hasCredentials()) {
       poller.start()

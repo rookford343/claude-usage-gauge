@@ -1,5 +1,28 @@
 # Claude Usage Gauge — User Guide
 
+## Installation
+
+### From DMG (Recommended)
+
+1. Download `Claude Usage Gauge-1.0.0-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
+2. Open the `.dmg` and drag **Claude Usage Gauge** to your Applications folder
+3. On first launch, macOS will block the unsigned app — go to **System Settings → Privacy & Security** and click **"Open Anyway"**
+4. If still blocked: `xattr -dr com.apple.quarantine /Applications/Claude\ Usage\ Gauge.app`
+5. The app appears in your menu bar — no dock icon
+
+### From Source
+
+Requires [Bun](https://bun.sh):
+
+```bash
+git clone https://github.com/rookford343/claude-usage-gauge.git
+cd claude-usage-gauge
+bun install
+bun run dev
+```
+
+---
+
 ## First-run authentication
 
 1. Launch the app (open the installed .app, or `bun run dev` in dev mode)
@@ -91,6 +114,11 @@ Your Claude.ai session cookie has expired. Click the tray icon → Setup to log 
 
 ### App says "Not configured" for API
 The Anthropic API key section is optional. If you only use Claude.ai Pro/Max and don't have an Anthropic API key, you can ignore this section entirely.
+
+## Quitting the App
+
+- **Right-click** the tray icon → **Quit Claude Usage Gauge**
+- Or: click the tray icon → mini popup → **Quit** (in the footer)
 
 ## Disconnecting
 

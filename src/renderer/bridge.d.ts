@@ -19,6 +19,7 @@ declare global {
       onUsageUpdated(cb: (data: UsageData) => void): void
       onAuthComplete(cb: () => void): void
       removeAllListeners(channel: string): void
+      quit(): Promise<void>
     }
   }
 }
