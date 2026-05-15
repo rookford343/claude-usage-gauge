@@ -4,7 +4,7 @@
 
 ### From DMG (Recommended)
 
-1. Download `Claude Usage Gauge-1.0.0-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
+1. Download `Claude Usage Gauge-1.1.0-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
 2. Open the `.dmg` and drag **Claude Usage Gauge** to your Applications folder
 3. On first launch, macOS will block the unsigned app — go to **System Settings → Privacy & Security** and click **"Open Anyway"**
 4. If still blocked: `xattr -dr com.apple.quarantine /Applications/Claude\ Usage\ Gauge.app`
@@ -76,8 +76,8 @@ Click **Full View →** or ⚙ to open the expanded 480×560px window:
 - **Session Limit** — progress bar + messages remaining estimate + reset time (countdown + exact clock)
 - **Weekly Limit** — progress bar + reset day and time (e.g. `Resets Sun 11:00 pm`)
 - **Anthropic API** — key validity status. Click "Enter key" to add an API key.
-- **Usage History** — 7-day grid showing peak session usage per day
-- **Settings** — display style and poll interval; both dropdowns load your last-saved values on open
+- **Usage History** — 7-day grid showing peak weekly usage per day
+- **Settings** — display style, poll interval, tray theme, notifications, auto-launch, CSV export, and disconnect
 
 ## Anthropic API key (optional)
 
@@ -97,6 +97,38 @@ Controls how often the app checks Claude.ai for updated usage. Default is 60s.
 Available intervals: 30s, 60s, 2m, 5m
 
 Change in Full View → Settings. The setting persists across restarts.
+
+## Tray icon theme
+
+Controls the ring track and divider colors in the tray icon:
+
+| Option | Behavior |
+|--------|----------|
+| **System** *(default)* | Follows the macOS light/dark mode setting automatically |
+| **Dark** | Always uses the dark palette (gray track) |
+| **Light** | Always uses the light palette (light gray track) |
+
+Change in Full View → Settings → Tray icon theme.
+
+## Desktop notifications
+
+When enabled, the app fires a native macOS notification when session or weekly usage crosses **80%** or **95%**. Each threshold fires once per crossing — it resets only after usage drops back below that level.
+
+Enable in Full View → Settings → Usage notifications checkbox.
+
+macOS may prompt you to allow notifications from Claude Usage Gauge on first use. If denied, go to **System Settings → Notifications → Claude Usage Gauge** to enable them.
+
+## Auto-launch at login
+
+When enabled, the app starts automatically when you log in to macOS (added to System Settings → General → Login Items).
+
+Enable in Full View → Settings → Launch at login checkbox.
+
+## Export history as CSV
+
+Saves the 7-day usage history (date, session peak %, weekly peak %) to a CSV file via a standard save dialog. The file defaults to your Downloads folder.
+
+Click **Export history as CSV** in Full View → Settings.
 
 ## Troubleshooting
 

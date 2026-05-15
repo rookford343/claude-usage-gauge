@@ -28,6 +28,14 @@ A macOS menu bar app that shows your real-time Claude AI usage limits as a glanc
 
 **Smart Polling** — Polls every 60 seconds (configurable 30s–5m). Polling survives window open/close. On session expiry, transitions gracefully without crashing.
 
+**Desktop Notifications** — Optional native macOS notifications when session or weekly usage crosses 80% or 95%. Fires once per threshold crossing — no repeated alerts.
+
+**Auto-Launch** — Optional launch at macOS login via System Settings Login Items.
+
+**Tray Icon Theme** — System (auto), Dark, or Light palette for the tray ring colors. Adapts automatically when the OS switches between light and dark mode.
+
+**Export Usage History** — Save 7-day usage history as a CSV file via a standard save dialog.
+
 **Secure by Design** — All credentials encrypted at rest via macOS Keychain through Electron's `safeStorage` API. See [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
@@ -41,7 +49,7 @@ A macOS menu bar app that shows your real-time Claude AI usage limits as a glanc
 
 ### Install from DMG
 
-1. Download `Claude Usage Gauge-1.0.0-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
+1. Download `Claude Usage Gauge-1.1.0-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
 2. Open the `.dmg` and drag **Claude Usage Gauge** to your Applications folder
 3. On first launch, macOS will block the unsigned app — go to **System Settings → Privacy & Security** and click **"Open Anyway"**
 4. If still blocked: `xattr -dr com.apple.quarantine /Applications/Claude\ Usage\ Gauge.app`
@@ -239,7 +247,13 @@ limitations under the License.
 
 ## Roadmap
 
-### v1.0.0 — Current Release
+### v1.1.0 — Current Release
+- Desktop notifications at 80% and 95% usage (session and weekly)
+- Auto-launch on macOS login
+- Tray icon theme: System / Dark / Light with automatic OS detection
+- Export 7-day usage history as CSV
+
+### v1.0.0
 - Donut gauge tray icon with green/yellow/red color thresholds
 - All 4 display styles (Donut, Dual Donut, Dual Numbers, Battery Bar)
 - Mini popup — dual gauges, reset countdowns, refresh + quit buttons
@@ -248,13 +262,6 @@ limitations under the License.
 - safeStorage credential encryption (macOS Keychain)
 - Configurable poll interval (30s / 60s / 2m / 5m)
 - Right-click tray menu with Quit option
-- Security docs, user guide, data source docs
-
-### v1.1.0 — Polish
-- Optional desktop notifications when limits hit 80% / 95%
-- Auto-launch on macOS login
-- Light/dark mode tray icon variants
-- Export usage history to CSV
 
 ### v1.2.0 — Power User
 - Multi-account support (switch between Claude.ai accounts)
