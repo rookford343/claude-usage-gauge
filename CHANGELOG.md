@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.3 — 2026-05-18
+
+### Bug Fixes
+- **Weekly history bars** — bars in the 7-day history grid now show daily consumed usage (how much of the weekly limit was used that day) rather than the running cumulative peak. Each bar's height represents the delta between the weekly percentage at the start of the day and the end of the day.
+- **Weekly reset label** — the "Resets …" label in Full View now shows "Today" when the reset falls on the current day (e.g. `Today 7:00 am`) instead of always showing the weekday name (e.g. `Mon 7:00 am`).
+
 ## v1.1.2 — 2026-05-15
 
 ### Bug Fixes

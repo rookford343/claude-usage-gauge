@@ -23,8 +23,9 @@ export function recordUsage(sessionPct: number, weeklyPct: number): void {
   if (existing) {
     if (sessionPct > existing.sessionPeak) existing.sessionPeak = sessionPct
     if (weeklyPct > existing.weeklyPeak) existing.weeklyPeak = weeklyPct
+    if (existing.weeklyStart === undefined) existing.weeklyStart = weeklyPct
   } else {
-    days.push({ date: todayStr, sessionPeak: sessionPct, weeklyPeak: weeklyPct })
+    days.push({ date: todayStr, sessionPeak: sessionPct, weeklyPeak: weeklyPct, weeklyStart: weeklyPct })
   }
 
   // Keep only last 7 days

@@ -4,7 +4,7 @@
 
 ### From DMG (Recommended)
 
-1. Download `Claude Usage Gauge-1.1.0-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
+1. Download `Claude Usage Gauge-1.1.3-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
 2. Open the `.dmg` and drag **Claude Usage Gauge** to your Applications folder
 3. On first launch, macOS will block the unsigned app — go to **System Settings → Privacy & Security** and click **"Open Anyway"**
 4. If still blocked: `xattr -dr com.apple.quarantine /Applications/Claude\ Usage\ Gauge.app`
@@ -64,7 +64,7 @@ Click the tray icon to open the mini popup (320×240px):
 - **Right donut** — weekly limit, percentage shown in center
 - **Reset countdowns** — time remaining + exact clock time under each gauge (e.g. `Resets 2h 14m (3:00 pm)`)
   - Session uses countdown + clock time (5-hour window)
-  - Weekly uses day + clock time (e.g. `Resets Sun 11:00 pm`)
+  - Weekly uses day + clock time (e.g. `Resets Mon 7:00 am`); shows `Today 7:00 am` when the reset falls on the current day
 - **↺ button** — forces an immediate refresh
 - **⚙ button / Full View →** — opens the expanded Full View window
 - **● dot** — Anthropic API key status (green = valid, red = invalid, gray = not configured)
@@ -76,7 +76,7 @@ Click **Full View →** or ⚙ to open the expanded 480×560px window:
 - **Session Limit** — progress bar + messages remaining estimate + reset time (countdown + exact clock)
 - **Weekly Limit** — progress bar + reset day and time (e.g. `Resets Sun 11:00 pm`)
 - **Anthropic API** — key validity status. Click "Enter key" to add an API key.
-- **Usage History** — 7-day grid showing peak weekly usage per day
+- **Usage History** — 7-day grid showing how much of the weekly limit was consumed each day (daily delta, not running cumulative)
 - **Settings** — display style, poll interval, tray theme, notifications, auto-launch, CSV export, and disconnect
 
 ## Anthropic API key (optional)

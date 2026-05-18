@@ -18,7 +18,8 @@ function formatRemaining(iso: string | null): string {
 function formatWeeklyReset(iso: string | null): string {
   if (!iso) return '—'
   const d = new Date(iso)
-  const day = d.toLocaleDateString('en-US', { weekday: 'short' })
+  const isToday = d.toDateString() === new Date().toDateString()
+  const day = isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })
   const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
   return `${day} ${time.toLowerCase()}`
 }

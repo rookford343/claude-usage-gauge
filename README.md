@@ -49,7 +49,7 @@ A macOS menu bar app that shows your real-time Claude AI usage limits as a glanc
 
 ### Install from DMG
 
-1. Download `Claude Usage Gauge-1.1.2-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
+1. Download `Claude Usage Gauge-1.1.3-arm64.dmg` from [Releases](https://github.com/rookford343/claude-usage-gauge/releases)
 2. Open the `.dmg` and drag **Claude Usage Gauge** to your Applications folder
 3. On first launch, macOS will block the unsigned app — go to **System Settings → Privacy & Security** and click **"Open Anyway"**
 4. If still blocked: `xattr -dr com.apple.quarantine /Applications/Claude\ Usage\ Gauge.app`
@@ -247,7 +247,11 @@ limitations under the License.
 
 ## Roadmap
 
-### v1.1.2 — Current Release
+### v1.1.3 — Current Release
+- Fix: 7-day history bars now show daily consumed usage (delta from day start), not the running cumulative weekly peak
+- Fix: Weekly reset label shows "Today" when the reset falls on the current day
+
+### v1.1.2
 - Fix: Dual-donut style no longer clips "88%" or "100%" text — canvas widened (84→100pt), layout adjusted
 
 ### v1.1.1

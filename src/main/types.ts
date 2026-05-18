@@ -19,6 +19,7 @@ export interface DayUsage {
   date: string
   sessionPeak: number
   weeklyPeak: number
+  weeklyStart?: number
 }
 
 export interface ApiStatus {
